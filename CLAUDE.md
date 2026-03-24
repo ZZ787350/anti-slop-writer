@@ -21,3 +21,10 @@ Before marking work complete:
 1. Run `uv run ruff check src/ && uv run mypy src/ && uv run pytest`
 2. Verify all tests pass
 3. Do a manual CLI test if applicable
+
+## Active Technologies
+- Python 3.11+ + typer (CLI), httpx (HTTP client), pydantic (config/validation), pydantic-settings (settings) (002-mvp-text-rewrite)
+- N/A (in-memory processing only) (002-mvp-text-rewrite)
+
+## Recent Changes
+- 002-mvp-text-rewrite: Added Python 3.11+ + typer (CLI), httpx (HTTP client), pydantic (config/validation), pydantic-settings (settings)
