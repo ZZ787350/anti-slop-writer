@@ -155,7 +155,17 @@ async def _rewrite_async(
         return EXIT_INPUT_ERROR
 
     if text is not None:
-        input_text = text
+        # Check for stdin indicator
+        if text == "-":
+            # Read from stdin
+            try:
+                import sys
+                input_text = sys.stdin.read()
+            except Exception as e:
+                typer.echo(f"Error: Failed to read from stdin: {e}", err=True)
+                return EXIT_INPUT_ERROR
+        else:
+            input_text = text
     elif input_file is not None:
         if not input_file.exists():
             typer.echo(

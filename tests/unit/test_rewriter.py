@@ -300,3 +300,143 @@ class TestRewriterResult:
             style_used="neutral",
         )
         assert result_no_reduce.meets_threshold() is False
+
+
+class TestStylePromptInjection:
+    """Tests for style prompt injection (Phase 5, US3)."""
+
+    @pytest.mark.asyncio
+    async def test_style_formal_includes_style_instruction(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """Formal style includes formal style instruction in system prompt."""
+        captured_prompts: dict[str, str] = {}
+
+        class CapturingProvider(FakeProvider):
+            async def call(
+                self,
+                system_prompt: str,
+                user_prompt: str,
+                **kwargs: object,
+            ) -> LLMResponse:
+                captured_prompts["system"] = system_prompt
+                captured_prompts["user"] = user_prompt
+                return await super().call(system_prompt, user_prompt, **kwargs)
+
+        provider = CapturingProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack)
+
+        await rewriter.rewrite("Test text.", style="formal")
+
+        # Verify formal style instructions are in the system prompt
+        system_prompt = captured_prompts["system"]
+        assert "contractions" in system_prompt.lower() or "complete sentences" in system_prompt.lower()
+
+    @pytest.mark.asyncio
+    async def test_style_casual_includes_style_instruction(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """Casual style includes casual style instruction in system prompt."""
+        captured_prompts: dict[str, str] = {}
+
+        class CapturingProvider(FakeProvider):
+            async def call(
+                self,
+                system_prompt: str,
+                user_prompt: str,
+                **kwargs: object,
+            ) -> LLMResponse:
+                captured_prompts["system"] = system_prompt
+                return await super().call(system_prompt, user_prompt, **kwargs)
+
+        provider = CapturingProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack)
+
+        await rewriter.rewrite("Test text.", style="casual")
+
+        # Verify casual style instructions are in the system prompt
+        system_prompt = captured_prompts["system"]
+        assert "contractions" in system_prompt.lower() or "conversational" in system_prompt.lower()
+
+    @pytest.mark.asyncio
+    async def test_style_neutral_no_extra_instruction(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """Neutral style does not add extra style instructions."""
+        captured_prompts: dict[str, str] = {}
+
+        class CapturingProvider(FakeProvider):
+            async def call(
+                self,
+                system_prompt: str,
+                user_prompt: str,
+                **kwargs: object,
+            ) -> LLMResponse:
+                captured_prompts["system"] = system_prompt
+                return await super().call(system_prompt, user_prompt, **kwargs)
+
+        provider = CapturingProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack)
+
+        await rewriter.rewrite("Test text.", style="neutral")
+
+        # Neutral style should not have a style section
+        system_prompt = captured_prompts["system"]
+        # The prompt should not have an extra Style section for neutral
+        assert "Style:" not in system_prompt or system_prompt.endswith("Be direct and clear")
+
+    @pytest.mark.asyncio
+    async def test_default_style_is_used_when_not_specified(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """Rewriter uses default_style when style not specified."""
+        provider = FakeProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack, default_style="formal")
+
+        result = await rewriter.rewrite("Test text.")
+
+        assert result.style_used == "formal"
+
+    @pytest.mark.asyncio
+    async def test_explicit_style_overrides_default(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """Explicit style parameter overrides default_style."""
+        provider = FakeProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack, default_style="formal")
+
+        result = await rewriter.rewrite("Test text.", style="casual")
+
+        assert result.style_used == "casual"
+
+    @pytest.mark.asyncio
+    async def test_all_valid_styles_accepted(
+        self, provider_config: ProviderConfig, english_pack: type[EnglishPack]
+    ) -> None:
+        """All valid styles (neutral, formal, casual) are accepted."""
+        provider = FakeProvider(provider_config)
+        rewriter = Rewriter(provider, english_pack)
+
+        for style in ["neutral", "formal", "casual"]:
+            result = await rewriter.rewrite("Test text.", style=style)
+            assert result.style_used == style
+
+    def test_english_pack_has_all_style_prompts(
+        self, english_pack: type[EnglishPack]
+    ) -> None:
+        """EnglishPack has prompts for all valid styles."""
+        valid_styles = ["neutral", "formal", "casual"]
+
+        for style in valid_styles:
+            assert style in english_pack.style_prompts
+
+    def test_english_pack_get_system_prompt_returns_string(
+        self, english_pack: type[EnglishPack]
+    ) -> None:
+        """get_system_prompt returns a non-empty string for all styles."""
+        for style in ["neutral", "formal", "casual"]:
+            prompt = english_pack.get_system_prompt(style)
+            assert isinstance(prompt, str)
+            assert len(prompt) > 0
+            # All prompts should contain the core instruction
+            assert "AI" in prompt or "natural" in prompt.lower()

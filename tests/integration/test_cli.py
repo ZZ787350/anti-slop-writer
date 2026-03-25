@@ -262,20 +262,51 @@ class TestCLIErrors:
             assert "sk-super-secret-key" not in output
 
 
-class TestCLIFutureFeatures:
-    """Placeholder tests for features implemented in later phases."""
+class TestCLIFileIO:
+    """Tests for file input/output handling (Phase 4, US2)."""
 
-    @pytest.mark.skip(reason="File I/O implemented in Phase 4 (US2)")
-    def test_input_file_option(self, cli_runner: CliRunner, tmp_path: Path) -> None:
+    def test_input_file_option(
+        self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
+    ) -> None:
         """CLI accepts --input option for file-based processing."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
         input_file = tmp_path / "input.txt"
-        input_file.write_text("Test content")
+        input_file.write_text("Test content to rewrite.")
 
-        result = cli_runner.invoke(app, ["rewrite", "--input", str(input_file)])
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
 
-        assert result.exit_code in (0, 1, 2, 3, 4, 5)
+            result = cli_runner.invoke(app, ["rewrite", "--input", str(input_file)])
 
-    @pytest.mark.skip(reason="File I/O implemented in Phase 4 (US2)")
+            assert result.exit_code == 0
+            assert SAMPLE_CLEAN_TEXT in result.output
+
+    def test_input_file_not_found(
+        self, cli_runner: CliRunner, monkeypatch
+    ) -> None:
+        """CLI exits with code 1 when input file doesn't exist."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        result = cli_runner.invoke(
+            app, ["rewrite", "--input", "/nonexistent/path/file.txt"]
+        )
+
+        assert result.exit_code == 1
+        output = result.output.lower()
+        assert "file not found" in output
+
     def test_output_file_option(
         self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
     ) -> None:
@@ -283,9 +314,165 @@ class TestCLIFutureFeatures:
         monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
 
         output_file = tmp_path / "output.txt"
+
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
+
+            result = cli_runner.invoke(
+                app, ["rewrite", "--output", str(output_file), "Test text."]
+            )
+
+            assert result.exit_code == 0
+            assert output_file.exists()
+            assert output_file.read_text() == SAMPLE_CLEAN_TEXT
+
+    def test_input_and_output_together(
+        self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
+    ) -> None:
+        """CLI handles both --input and --output options."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        input_file = tmp_path / "article.txt"
+        input_file.write_text("AI generated content to rewrite.")
+        output_file = tmp_path / "rewritten.txt"
+
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
+
+            result = cli_runner.invoke(
+                app,
+                ["rewrite", "--input", str(input_file), "--output", str(output_file)],
+            )
+
+            assert result.exit_code == 0
+            assert output_file.exists()
+            assert SAMPLE_CLEAN_TEXT in output_file.read_text()
+
+    def test_output_creates_parent_directories(
+        self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
+    ) -> None:
+        """CLI creates parent directories for output file if needed."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        output_file = tmp_path / "subdir" / "nested" / "output.txt"
+
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
+
+            result = cli_runner.invoke(
+                app, ["rewrite", "--output", str(output_file), "Test text."]
+            )
+
+            assert result.exit_code == 0
+            assert output_file.exists()
+
+    def test_text_and_input_mutually_exclusive(
+        self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
+    ) -> None:
+        """CLI rejects both text argument and --input option together."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        input_file = tmp_path / "input.txt"
+        input_file.write_text("File content")
+
         result = cli_runner.invoke(
-            app, ["rewrite", "--output", str(output_file), "Test text."]
+            app, ["rewrite", "--input", str(input_file), "Direct text"]
         )
 
-        # Output file should be created or error should be graceful
-        pass
+        assert result.exit_code == 1
+        output = result.output.lower()
+        assert "both" in output or "mutually" in output
+
+
+class TestCLIStdin:
+    """Tests for stdin input handling (Phase 4, US2)."""
+
+    def test_stdin_input_with_dash(
+        self, cli_runner: CliRunner, monkeypatch
+    ) -> None:
+        """CLI accepts '-' to read from stdin."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
+
+            # Simulate stdin input
+            result = cli_runner.invoke(
+                app, ["rewrite", "-"], input="Text from stdin"
+            )
+
+            assert result.exit_code == 0
+
+    def test_stdin_with_output_file(
+        self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
+    ) -> None:
+        """CLI can read from stdin and write to file."""
+        monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
+
+        output_file = tmp_path / "from_stdin.txt"
+
+        with patch(
+            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+        ) as mock_provider_class:
+            mock_provider = AsyncMock()
+            mock_provider.call = AsyncMock(
+                return_value=type(
+                    "LLMResponse",
+                    (),
+                    {"content": SAMPLE_CLEAN_TEXT, "model": "test", "usage": {}},
+                )()
+            )
+            mock_provider.close = AsyncMock()
+            mock_provider_class.return_value = mock_provider
+
+            result = cli_runner.invoke(
+                app, ["rewrite", "-", "--output", str(output_file)],
+                input="Text from stdin"
+            )
+
+            assert result.exit_code == 0
+            assert output_file.exists()

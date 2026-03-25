@@ -82,15 +82,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Unit test for file I/O handling in tests/unit/test_processor.py
-- [ ] T027 [P] [US2] Integration test for file input/output in tests/integration/test_cli.py
+- [X] T026 [P] [US2] Unit test for file I/O handling in tests/unit/test_processor.py
+- [X] T027 [P] [US2] Integration test for file input/output in tests/integration/test_cli.py
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Add --input option handling in src/anti_slop_writer/interfaces/cli.py
-- [ ] T029 [US2] Add --output option handling with default naming in src/anti_slop_writer/interfaces/cli.py
-- [ ] T030 [US2] Add file validation (exists, readable) in src/anti_slop_writer/core/processor.py
-- [ ] T031 [US2] Add stdin support (`-` argument) in src/anti_slop_writer/interfaces/cli.py
+- [X] T028 [US2] Add --input option handling in src/anti_slop_writer/interfaces/cli.py
+- [X] T029 [US2] Add --output option handling with default naming in src/anti_slop_writer/interfaces/cli.py
+- [X] T030 [US2] Add file validation (exists, readable) in src/anti_slop_writer/core/processor.py
+- [X] T031 [US2] Add stdin support (`-` argument) in src/anti_slop_writer/interfaces/cli.py
 
 **Checkpoint**: User Story 2 complete - file-based processing functional
 
@@ -104,13 +104,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Unit test for style prompt injection in tests/unit/test_rewriter.py
-- [ ] T033 [P] [US3] Integration test for style options in tests/integration/test_cli.py
+- [X] T032 [P] [US3] Unit test for style prompt injection in tests/unit/test_rewriter.py
+- [X] T033 [P] [US3] Integration test for style options in tests/integration/test_cli.py
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Add --style option in src/anti_slop_writer/interfaces/cli.py
-- [ ] T035 [US3] Integrate style prompts into Rewriter in src/anti_slop_writer/core/rewriter.py
+- [X] T034 [US3] Add --style option in src/anti_slop_writer/interfaces/cli.py
+- [X] T035 [US3] Integrate style prompts into Rewriter in src/anti_slop_writer/core/rewriter.py
 
 **Checkpoint**: User Story 3 complete - style selection functional
 
@@ -124,15 +124,15 @@
 
 ### Tests for User Story 4
 
-- [ ] T036 [P] [US4] Unit test for ProviderConfig validation in tests/unit/test_provider.py
-- [ ] T037 [P] [US4] Integration test for custom endpoint in tests/integration/test_provider.py
+- [X] T036 [P] [US4] Unit test for ProviderConfig validation in tests/unit/test_provider.py
+- [X] T037 [P] [US4] Integration test for custom endpoint in tests/integration/test_provider_config.py
 
 ### Implementation for User Story 4
 
-- [ ] T038 [US4] Implement config file loading in src/anti_slop_writer/core/config.py
-- [ ] T039 [US4] Add environment variable support (ANTI_SLOP_WRITER_*) in src/anti_slop_writer/core/config.py
-- [ ] T040 [US4] Add --provider option in src/anti_slop_writer/interfaces/cli.py
-- [ ] T041 [US4] Add credential validation with clear error messages in src/anti_slop_writer/providers/openai_compatible.py
+- [X] T038 [US4] Implement config file loading in src/anti_slop_writer/core/config.py
+- [X] T039 [US4] Add environment variable support (ANTI_SLOP_WRITER_*) in src/anti_slop_writer/core/config.py
+- [X] T040 [US4] Add --provider option in src/anti_slop_writer/interfaces/cli.py
+- [X] T041 [US4] Add credential validation with clear error messages in src/anti_slop_writer/providers/openai_compatible.py
 
 **Checkpoint**: User Story 4 complete - provider configuration functional
 
