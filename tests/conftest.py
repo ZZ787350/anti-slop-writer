@@ -39,7 +39,7 @@ def provider_config() -> ProviderConfig:
     """A valid ProviderConfig pointing at a fake endpoint."""
     return ProviderConfig(
         api_key="test-api-key-1234",
-        base_url="https://api.example.com/v1",
+        endpoint="https://api.example.com/v1",
         model="gpt-4o-mini",
         timeout=10.0,
         max_retries=1,

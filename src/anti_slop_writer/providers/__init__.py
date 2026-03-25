@@ -10,9 +10,11 @@ from anti_slop_writer.providers.base import (
     RateLimitError,
 )
 from anti_slop_writer.providers.config import ProviderConfig, Settings
+from anti_slop_writer.providers.openai_compatible import OpenAICompatibleProvider
 
 __all__ = [
     "BaseProvider",
+    "OpenAICompatibleProvider",
     "LLMResponse",
     "ProviderConfig",
     "Settings",

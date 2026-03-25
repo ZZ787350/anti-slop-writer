@@ -56,19 +56,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] Unit test for Rewriter in tests/unit/test_rewriter.py
-- [ ] T017 [P] [US1] Unit test for RuleEngine pattern counting and FR-007 (no new Tier 1) in tests/unit/test_rule_engine.py
-- [ ] T018 [P] [US1] Integration test for CLI rewrite command in tests/integration/test_cli.py
+- [X] T016 [P] [US1] Unit test for Rewriter in tests/unit/test_rewriter.py
+- [X] T017 [P] [US1] Unit test for RuleEngine pattern counting and FR-007 (no new Tier 1) in tests/unit/test_rule_engine.py
+- [X] T018 [P] [US1] Integration test for CLI rewrite command in tests/integration/test_cli.py
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implement OpenAI-compatible provider in src/anti_slop_writer/providers/openai_compatible.py
-- [ ] T020 [US1] Implement Rewriter class with LLM integration in src/anti_slop_writer/core/rewriter.py
-- [ ] T021 [US1] Implement text processing utilities in src/anti_slop_writer/core/processor.py
-- [ ] T022 [US1] Implement CLI rewrite command in src/anti_slop_writer/interfaces/cli.py
-- [ ] T023 [US1] Add error handling with exit codes 0-5 per contracts/cli.md
-- [ ] T024 [US1] Add logging (metadata only, no text content) per FR-014
-- [ ] T025 [US1] Add word count warning (FR-017) when input exceeds 5,000 words in src/anti_slop_writer/core/processor.py
+- [X] T019 [US1] Implement OpenAI-compatible provider in src/anti_slop_writer/providers/openai_compatible.py
+- [X] T020 [US1] Implement Rewriter class with LLM integration in src/anti_slop_writer/core/rewriter.py
+- [X] T021 [US1] Implement text processing utilities in src/anti_slop_writer/core/processor.py
+- [X] T022 [US1] Implement CLI rewrite command in src/anti_slop_writer/interfaces/cli.py
+- [X] T023 [US1] Add error handling with exit codes 0-5 per contracts/cli.md
+- [X] T024 [US1] Add logging (metadata only, no text content) per FR-014
+- [X] T025 [US1] Add word count warning (FR-017) when input exceeds 5,000 words in src/anti_slop_writer/core/processor.py
 
 **Checkpoint**: User Story 1 complete - basic text rewriting functional
 
