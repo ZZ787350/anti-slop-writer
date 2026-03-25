@@ -7,26 +7,23 @@ from typing import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from typer.testing import CliRunner
 
 from anti_slop_writer.language_packs.english import EnglishPack
-from anti_slop_writer.providers.base import BaseProvider, LLMResponse
 from anti_slop_writer.providers.config import ProviderConfig
 
+from fixtures import FakeProvider, SAMPLE_AI_TEXT, SAMPLE_CLEAN_TEXT  # type: ignore[import-untyped]
+
 
 # ---------------------------------------------------------------------------
-# Sample texts
+# CLI fixtures
 # ---------------------------------------------------------------------------
 
-SAMPLE_AI_TEXT = (
-    "In today's fast-paced world, it is crucial to leverage cutting-edge "
-    "solutions. This groundbreaking approach will seamlessly transform the "
-    "paradigm and foster innovation across the ecosystem."
-)
 
-SAMPLE_CLEAN_TEXT = (
-    "The new approach saves time and works well in practice. "
-    "It removes steps that caused delays and makes the process simpler."
-)
+@pytest.fixture
+def cli_runner() -> CliRunner:
+    """Provide a Typer CLI test runner."""
+    return CliRunner()
 
 
 # ---------------------------------------------------------------------------
@@ -49,31 +46,6 @@ def provider_config() -> ProviderConfig:
 # ---------------------------------------------------------------------------
 # Mock provider fixture
 # ---------------------------------------------------------------------------
-
-
-class FakeProvider(BaseProvider):
-    """A fake LLM provider for tests that returns a configurable response."""
-
-    def __init__(self, config: ProviderConfig, response_text: str = SAMPLE_CLEAN_TEXT) -> None:
-        super().__init__(config)
-        self._response_text = response_text
-
-    async def call(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        *,
-        temperature: float = 0.7,
-        max_tokens: int | None = None,
-    ) -> LLMResponse:
-        return LLMResponse(
-            content=self._response_text,
-            model="fake-model",
-            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
-        )
-
-    async def close(self) -> None:
-        pass
 
 
 @pytest.fixture

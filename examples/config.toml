@@ -1,0 +1,47 @@
+# Example configuration file for anti-slop-writer
+#
+# Copy this file to ~/.config/anti-slop-writer/config.toml
+# and customize as needed
+#
+# Configuration priority (highest to lowest)
+# 1. Environment variables (ANTI_SLOP_WRITER_*)
+# 2. This config file
+# 3. Built-in defaults
+#
+
+[provider]
+# API key for your LLM provider (required)
+# Can also be set via ANTI_SLOP_WRITER_API_KEY environment variable
+# api_key = "your-api-key-here"
+
+# API endpoint URL (optional)
+# Defaults to OpenAI's API endpoint
+# For Azure OpenAI: "https://your-resource.openai.azure.com/openai/deployments/your-deployment"
+# For Zhipu GLM: "https://open.bigmodel.cn/api/paas/v4"
+# endpoint = "https://api.openai.com/v1"
+
+# Model to use for text generation (optional)
+# Defaults to "gpt-4o-mini"
+# model = "gpt-4o-mini"
+
+# Request timeout in seconds (optional)
+# Defaults to 30.0
+# timeout = 30.0
+
+# Maximum retry attempts for transient errors (optional)
+# Defaults to 3
+# max_retries = 3
+
+[rewrite]
+# Default output style (optional)
+# Options: "neutral", "formal", "casual"
+# Defaults to "neutral"
+# style = "neutral"
+
+# Maximum retries for rewrite attempts (optional)
+# Defaults to 3
+# max_retries = 3
+
+# Timeout for rewrite operations in seconds (optional)
+# Defaults to 60.0
+# timeout = 60.0

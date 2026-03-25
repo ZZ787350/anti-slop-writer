@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typer.testing import CliRunner
 
 from anti_slop_writer.interfaces.cli import app
 from anti_slop_writer.providers import (
@@ -15,15 +14,7 @@ from anti_slop_writer.providers import (
     NetworkError,
     RateLimitError,
 )
-
-
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    """Provide a Typer CLI test runner."""
-    return CliRunner()
-
-
-SAMPLE_CLEAN_TEXT = "This is a clean response."
+from fixtures import SAMPLE_CLEAN_TEXT  # type: ignore[import-untyped]
 
 
 class TestCLIProviderConfig:
@@ -208,7 +199,7 @@ class TestConfigFileLoading:
         self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
     ) -> None:
         """CLI loads config from ~/.config/anti-slop-writer/config.toml."""
-        # Create a mock home directory
+        # Create a config file in temp directory
         config_dir = tmp_path / ".config" / "anti-slop-writer"
         config_dir.mkdir(parents=True)
         config_file = config_dir / "config.toml"
@@ -221,28 +212,31 @@ model = "config-model"
 style = "formal"
 """)
 
-        # Mock the home directory
-        monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
 
+        # Mock DEFAULT_CONFIG_PATHS to use our temp directory
         with patch(
-            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
-        ) as mock_provider_class:
-            mock_provider = AsyncMock()
-            mock_provider.call = AsyncMock(
-                return_value=type(
-                    "LLMResponse",
-                    (),
-                    {"content": SAMPLE_CLEAN_TEXT, "model": "config-model", "usage": {}},
-                )()
-            )
-            mock_provider.close = AsyncMock()
-            mock_provider_class.return_value = mock_provider
+            "anti_slop_writer.core.config.DEFAULT_CONFIG_PATHS",
+            [config_file],
+        ):
+            with patch(
+                "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+            ) as mock_provider_class:
+                mock_provider = AsyncMock()
+                mock_provider.call = AsyncMock(
+                    return_value=type(
+                        "LLMResponse",
+                        (),
+                        {"content": SAMPLE_CLEAN_TEXT, "model": "config-model", "usage": {}},
+                    )()
+                )
+                mock_provider.close = AsyncMock()
+                mock_provider_class.return_value = mock_provider
 
-            result = cli_runner.invoke(app, ["rewrite", "Test text."])
+                result = cli_runner.invoke(app, ["rewrite", "Test text."])
 
-            # Should succeed with config-loaded settings
-            assert result.exit_code == 0
+                # Should succeed with config-loaded settings
+                assert result.exit_code == 0
 
     def test_env_vars_override_config_file(
         self, cli_runner: CliRunner, tmp_path: Path, monkeypatch
@@ -257,28 +251,32 @@ endpoint = "https://from-config.com/v1"
 model = "config-model"
 """)
 
-        monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("ANTI_SLOP_WRITER_API_KEY", "test-key")
         # Env var should override config file
         monkeypatch.setenv("ANTI_SLOP_WRITER_MODEL", "env-override-model")
 
+        # Mock DEFAULT_CONFIG_PATHS to use our temp directory
         with patch(
-            "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
-        ) as mock_provider_class:
-            mock_provider = AsyncMock()
-            mock_provider.call = AsyncMock(
-                return_value=type(
-                    "LLMResponse",
-                    (),
-                    {"content": SAMPLE_CLEAN_TEXT, "model": "env-override-model", "usage": {}},
-                )()
-            )
-            mock_provider.close = AsyncMock()
-            mock_provider_class.return_value = mock_provider
+            "anti_slop_writer.core.config.DEFAULT_CONFIG_PATHS",
+            [config_file],
+        ):
+            with patch(
+                "anti_slop_writer.interfaces.cli.OpenAICompatibleProvider"
+            ) as mock_provider_class:
+                mock_provider = AsyncMock()
+                mock_provider.call = AsyncMock(
+                    return_value=type(
+                        "LLMResponse",
+                        (),
+                        {"content": SAMPLE_CLEAN_TEXT, "model": "env-override-model", "usage": {}},
+                    )()
+                )
+                mock_provider.close = AsyncMock()
+                mock_provider_class.return_value = mock_provider
 
-            result = cli_runner.invoke(app, ["rewrite", "Test text."])
+                result = cli_runner.invoke(app, ["rewrite", "Test text."])
 
-            assert result.exit_code == 0
+                assert result.exit_code == 0
 
 
 class TestProviderOption:
